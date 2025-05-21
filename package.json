@@ -6,6 +6,9 @@
     "build": "esbuild-wrapper",
     "np": "np --no-tests --no-cleanup"
   },
+  "files": [
+    "build"
+  ],
   "devDependencies": {
     "@energypatrikhu/esbuild-wrapper": "latest",
     "@types/node": "latest",
