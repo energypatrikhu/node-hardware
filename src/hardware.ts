@@ -20,6 +20,13 @@ interface MouseStroke {
   rolling?: number;
 }
 
+type MouseButton =
+  | "BUTTON_1"
+  | "BUTTON_2"
+  | "BUTTON_3"
+  | "BUTTON_4"
+  | "BUTTON_5";
+
 export class Hardware {
   private interception: Interception;
   private keyboardHw: Keyboard;
@@ -229,7 +236,7 @@ export class Hardware {
      * @param button - The mouse button to click. Must be one of: "BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", or "BUTTON_5".
      * @throws {Error} If an invalid button is provided.
      */
-    click: async (button: (typeof this.mouseButtons)[number]) => {
+    click: async (button: MouseButton) => {
       if (!this.mouseButtons.includes(button)) {
         throw new Error(`Invalid button. Use ${this.mouseButtons.join(", ")}.`);
       }
@@ -254,10 +261,7 @@ export class Hardware {
      * @param pressed - A boolean indicating whether the button should be pressed (`true`) or released (`false`).
      * @throws {Error} If an invalid button is provided.
      */
-    toggle: async (
-      button: (typeof this.mouseButtons)[number],
-      pressed: boolean,
-    ) => {
+    toggle: async (button: MouseButton, pressed: boolean) => {
       if (!this.mouseButtons.includes(button)) {
         throw new Error(`Invalid button. Use ${this.mouseButtons.join(", ")}.`);
       }
