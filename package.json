@@ -13,5 +13,17 @@
   },
   "dependencies": {
     "node-interception": "^2.0.4"
+  },
+  "author": "energypatrikhu",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/energypatrikhu/node-hardware.git"
+  },
+  "bugs": {
+    "url": "https://github.com/energypatrikhu/node-hardware/issues"
+  },
+  "homepage": "https://github.com/energypatrikhu/node-hardware",
+  "publishConfig": {
+    "access": "public"
   }
 }
