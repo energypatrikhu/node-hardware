@@ -5,7 +5,7 @@ import {
   MouseFlag,
   MouseState,
 } from "node-interception";
-import { Key, translateToKeyCodes } from "src/keycode";
+import { Key, translateToKeyCodes } from "./keycode";
 
 interface KeyStroke {
   hex: number;
