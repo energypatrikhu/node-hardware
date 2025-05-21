@@ -5,7 +5,6 @@ A TypeScript library for simulating keyboard and mouse input on Windows using th
 ## Features
 - Simulate keyboard input (single keys, key sequences, text)
 - Simulate mouse movement (absolute/relative), clicks, and scroll
-- Supports custom key mappings (including special and international keys)
 - Built with TypeScript for type safety
 
 ## Installation
