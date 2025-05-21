@@ -1,0 +1,17 @@
+{
+  "name": "@energypatrikhu/node-hardware",
+  "version": "0.0.0",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "esbuild-wrapper",
+    "start": "node build/index.js"
+  },
+  "devDependencies": {
+    "@energypatrikhu/esbuild-wrapper": "latest",
+    "@types/node": "latest",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "node-interception": "^2.0.4"
+  }
+}
