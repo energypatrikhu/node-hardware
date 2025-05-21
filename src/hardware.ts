@@ -40,7 +40,8 @@ export class Hardware {
     "BUTTON_5",
   ] as const;
 
-  pressDelay: number = 50;
+  delayAfterPress: number = 50;
+  delayAfterRelease: number = 50;
 
   constructor() {
     this.interception = new Interception();
@@ -137,13 +138,20 @@ export class Hardware {
      * @param input - The key input to be sent, of type `Key`.
      * @returns A promise that resolves when the key strokes have been sent and the delay has elapsed.
      */
-    sendKey: async (input: Key) => {
+    sendKey: async (
+      input: Key,
+      delayAfterPress?: number,
+      delayAfterRelease?: number,
+    ) => {
       const strokes = translateToKeyCodes(input);
 
       if (strokes.length === 0) {
         console.error("No key strokes found for input:", input);
         return;
       }
+
+      const pressDelay = delayAfterPress ?? this.delayAfterPress;
+      const releaseDelay = delayAfterRelease ?? this.delayAfterRelease;
 
       for (let stateIndex = 0; stateIndex < 2; stateIndex++) {
         for (const stroke of strokes) {
@@ -152,10 +160,14 @@ export class Hardware {
             state: stroke.states[stateIndex],
           });
         }
+
+        if (pressDelay > 0) {
+          await this.wait(pressDelay);
+        }
       }
 
-      if (this.pressDelay > 0) {
-        await this.wait(this.pressDelay);
+      if (releaseDelay > 0) {
+        await this.wait(releaseDelay);
       } else {
         this.waitSync(1);
       }
@@ -170,9 +182,13 @@ export class Hardware {
      * @param inputs - An array of `Key` objects to be sent in order.
      * @returns A promise that resolves when all keys have been sent.
      */
-    sendKeys: async (inputs: Key[]) => {
+    sendKeys: async (
+      inputs: Key[],
+      delayAfterPress?: number,
+      delayAfterRelease?: number,
+    ) => {
       for (const input of inputs) {
-        await this.keyboard.sendKey(input);
+        await this.keyboard.sendKey(input, delayAfterPress, delayAfterRelease);
       }
     },
 
@@ -205,9 +221,13 @@ export class Hardware {
      * @param text - The text string to be sent.
      * @returns The result of the `sendKeys` method, which handles the array of keys.
      */
-    printText: (text: string) => {
+    printText: (text: string, delayAfterCharTyping?: number) => {
       const chars = Array.from(text);
-      return this.keyboard.sendKeys(chars.map((ch) => ch as Key));
+      return this.keyboard.sendKeys(
+        chars.map((ch) => ch as Key),
+        this.delayAfterPress,
+        delayAfterCharTyping,
+      );
     },
   };
 
@@ -236,22 +256,35 @@ export class Hardware {
      * @param button - The mouse button to click. Must be one of: "BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", or "BUTTON_5".
      * @throws {Error} If an invalid button is provided.
      */
-    click: async (button: MouseButton) => {
+    click: async (
+      button: MouseButton,
+      delayAfterPress?: number,
+      delayAfterRelease?: number,
+    ) => {
       if (!this.mouseButtons.includes(button)) {
         throw new Error(`Invalid button. Use ${this.mouseButtons.join(", ")}.`);
       }
+
+      const pressDelay = delayAfterPress ?? this.delayAfterPress;
+      const releaseDelay = delayAfterRelease ?? this.delayAfterRelease;
 
       this.sendMouseStroke({
         state: MouseState[(button + "_DOWN") as keyof typeof MouseState],
       });
 
-      if (this.pressDelay > 0) {
-        await this.wait(this.pressDelay);
+      if (pressDelay > 0) {
+        await this.wait(pressDelay);
       }
 
       this.sendMouseStroke({
         state: MouseState[(button + "_UP") as keyof typeof MouseState],
       });
+
+      if (releaseDelay > 0) {
+        await this.wait(releaseDelay);
+      } else {
+        this.waitSync(1);
+      }
     },
 
     /**
