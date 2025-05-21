@@ -9,7 +9,6 @@ export type AltGrSpecial = keyof typeof altGrSpecial;
 export type ShiftSpecial = keyof typeof shiftSpecial;
 export type Key = KeyMap | ShiftMap | AltGrSpecial | ShiftSpecial;
 
-// Main key mapping (normal keys)
 const keyMap = {
   "0": { hex: 0x29, states: [0, 1] },
   "1": { hex: 0x2, states: [0, 1] },
@@ -103,7 +102,6 @@ const keyMap = {
   "rightArrow": { hex: 0x4d, states: [2, 3] },
 };
 
-// Shifted and AltGr mappings
 const shiftKey = { hex: 0x2a, states: [0, 1] };
 const altGrKey = { hex: 0x38, states: [2, 3] };
 
@@ -205,11 +203,12 @@ export function translateToKeyCodes(
   input: KeyMap | ShiftMap | AltGrSpecial | ShiftSpecial,
 ): KeyCodeResult[] {
   const result: KeyCodeResult[] = [];
-  // Try to match full key names first (for e.g. lWin)
+
   if (keyMap[input as KeyMap]) {
     result.push(keyMap[input as KeyMap]);
     return result;
   }
+
   for (const char of input) {
     if (keyMap[char as KeyMap]) {
       result.push(keyMap[char as KeyMap]);
@@ -228,10 +227,6 @@ export function translateToKeyCodes(
       throw new Error(`No mapping for character: ${char}`);
     }
   }
+
   return result;
 }
-
-// Example usage:
-// console.log(translateToKeyCodes('á'));
-// console.log(translateToKeyCodes('Á'));
-// console.log(translateToKeyCodes('lWin'));
