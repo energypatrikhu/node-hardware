@@ -8,7 +8,7 @@ import {
 import { Key, translateToKeyCodes } from "./keycode";
 
 interface KeyStroke {
-  hex: number;
+  code: number;
   state: number;
 }
 
@@ -132,7 +132,7 @@ export class Hardware {
     for (let stateIndex = 0; stateIndex < 2; stateIndex++) {
       for (const stroke of strokes) {
         this.sendKeyboardStroke({
-          hex: stroke.hex,
+          code: stroke.hex,
           state: stroke.states[stateIndex],
         });
       }
@@ -177,7 +177,7 @@ export class Hardware {
 
     for (const stroke of strokes) {
       this.sendKeyboardStroke({
-        hex: stroke.hex,
+        code: stroke.hex,
         state: stroke.states[pressed ? 0 : 1],
       });
     }
