@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "build/index.js",
   "scripts": {
-    "build": "esbuild-wrapper",
+    "build": "esbuild-wrapper && tsc",
     "np": "np --no-tests --no-cleanup"
   },
   "files": [
