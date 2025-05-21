@@ -4,11 +4,12 @@
   "main": "build/index.js",
   "scripts": {
     "build": "esbuild-wrapper",
-    "start": "node build/index.js"
+    "np": "np --no-tests --no-cleanup"
   },
   "devDependencies": {
     "@energypatrikhu/esbuild-wrapper": "latest",
     "@types/node": "latest",
+    "np": "^10.2.0",
     "typescript": "latest"
   },
   "dependencies": {
