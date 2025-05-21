@@ -5,6 +5,7 @@ import {
   MouseFlag,
   MouseState,
 } from "node-interception";
+import fs from "node:fs";
 import { Key, translateToKeyCodes } from "./keycode";
 
 interface KeyStroke {
@@ -32,6 +33,11 @@ export class Hardware {
   private keyboardHw: Keyboard;
   private mouseHw: Mouse;
 
+  private requiredDrivers = [
+    "C:/Windows/System32/drivers/keyboard.sys",
+    "C:/Windows/System32/drivers/mouse.sys",
+  ];
+
   private mouseButtons = [
     "BUTTON_1",
     "BUTTON_2",
@@ -44,6 +50,18 @@ export class Hardware {
   delayAfterRelease: number = 50;
 
   constructor() {
+    if (process.platform !== "win32") {
+      throw new Error("This library is only supported on Windows.");
+    }
+
+    for (const driver of this.requiredDrivers) {
+      if (!fs.existsSync(driver)) {
+        throw new Error(
+          `Required driver not found: "${driver}", please install Interception. (https://github.com/oblitum/Interception)`,
+        );
+      }
+    }
+
     this.interception = new Interception();
 
     this.keyboardHw = this.interception.getKeyboards()[0];
