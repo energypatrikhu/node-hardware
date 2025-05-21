@@ -214,7 +214,7 @@ export class Hardware {
      *                   if `false`, moves the mouse to the absolute screen coordinates. Defaults to `false`.
      * @returns A promise that resolves when the mouse movement has been sent.
      */
-    moveMouse: async (x: number, y: number, relative: boolean = false) => {
+    move: async (x: number, y: number, relative: boolean = false) => {
       this.sendMouseStroke({
         x,
         y,
