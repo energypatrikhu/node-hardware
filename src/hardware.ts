@@ -22,21 +22,29 @@ interface MouseStroke {
 
 export class Hardware {
   private interception: Interception;
-  private keyboard: Keyboard;
-  private mouse: Mouse;
+  private keyboardHw: Keyboard;
+  private mouseHw: Mouse;
+
+  private mouseButtons = [
+    "BUTTON_1",
+    "BUTTON_2",
+    "BUTTON_3",
+    "BUTTON_4",
+    "BUTTON_5",
+  ] as const;
 
   pressDelay: number = 50;
 
   constructor() {
     this.interception = new Interception();
 
-    this.keyboard = this.interception.getKeyboards()[0];
-    if (!this.keyboard) {
+    this.keyboardHw = this.interception.getKeyboards()[0];
+    if (!this.keyboardHw) {
       throw new Error("Failed to get keyboard device.");
     }
 
-    this.mouse = this.interception.getMice()[0];
-    if (!this.mouse) {
+    this.mouseHw = this.interception.getMice()[0];
+    if (!this.mouseHw) {
       throw new Error("Failed to get mouse device.");
     }
   }
@@ -74,12 +82,12 @@ export class Hardware {
       throw new Error("Interception not initialized.");
     }
 
-    if (!this.keyboard) {
+    if (!this.keyboardHw) {
       throw new Error("Failed to get device.");
     }
 
     // @ts-ignore
-    this.keyboard.send({
+    this.keyboardHw.send({
       type: "keyboard",
       information: 0,
       ...stroke,
@@ -98,162 +106,181 @@ export class Hardware {
       throw new Error("Interception not initialized.");
     }
 
-    if (!this.mouse) {
+    if (!this.mouseHw) {
       throw new Error("Failed to get mouse device.");
     }
 
     // @ts-ignore
-    this.mouse.send({
+    this.mouseHw.send({
       type: "mouse",
       information: 0,
       ...stroke,
     });
   }
 
-  /**
-   * Sends a key input by translating it into key codes and simulating keyboard strokes.
-   *
-   * This method translates the provided `input` into an array of key codes using `translateToKeyCodes`.
-   * For each key code, it sends both possible states (typically representing key press and release)
-   * by calling `sendKeyboardStroke`. After sending all strokes, it waits for a delay specified by
-   * `pressDelay` (if greater than 0), otherwise performs a synchronous wait.
-   *
-   * @param input - The key input to be sent, of type `Key`.
-   * @returns A promise that resolves when the key strokes have been sent and the delay has elapsed.
-   */
-  async sendKey(input: Key) {
-    const strokes = translateToKeyCodes(input);
+  keyboard = {
+    /**
+     * Sends a key input by translating it into key codes and simulating keyboard strokes.
+     *
+     * This method translates the provided `input` into an array of key codes using `translateToKeyCodes`.
+     * For each key code, it sends both possible states (typically representing key press and release)
+     * by calling `sendKeyboardStroke`. After sending all strokes, it waits for a delay specified by
+     * `pressDelay` (if greater than 0), otherwise performs a synchronous wait.
+     *
+     * @param input - The key input to be sent, of type `Key`.
+     * @returns A promise that resolves when the key strokes have been sent and the delay has elapsed.
+     */
+    sendKey: async (input: Key) => {
+      const strokes = translateToKeyCodes(input);
 
-    if (strokes.length === 0) {
-      console.error("No key strokes found for input:", input);
-      return;
-    }
+      if (strokes.length === 0) {
+        console.error("No key strokes found for input:", input);
+        return;
+      }
 
-    for (let stateIndex = 0; stateIndex < 2; stateIndex++) {
+      for (let stateIndex = 0; stateIndex < 2; stateIndex++) {
+        for (const stroke of strokes) {
+          this.sendKeyboardStroke({
+            code: stroke.hex,
+            state: stroke.states[stateIndex],
+          });
+        }
+      }
+
+      if (this.pressDelay > 0) {
+        await this.wait(this.pressDelay);
+      } else {
+        this.waitSync(1);
+      }
+    },
+
+    /**
+     * Sends a sequence of key inputs asynchronously.
+     *
+     * Iterates over the provided array of `Key` objects and sends each key using the `sendKey` method.
+     * Each key is sent sequentially, waiting for the previous one to complete before sending the next.
+     *
+     * @param inputs - An array of `Key` objects to be sent in order.
+     * @returns A promise that resolves when all keys have been sent.
+     */
+    sendKeys: async (inputs: Key[]) => {
+      for (const input of inputs) {
+        await this.keyboard.sendKey(input);
+      }
+    },
+
+    /**
+     * Toggles the state of a specified key by sending the appropriate keyboard strokes.
+     *
+     * @param key - The key to toggle, represented as a `Key`.
+     * @param pressed - A boolean indicating whether the key should be pressed (`true`) or released (`false`).
+     * @returns A promise that resolves when the key toggle operation is complete.
+     */
+    toggleKey: async (key: Key, pressed: boolean) => {
+      const strokes = translateToKeyCodes(key);
+
+      if (strokes.length === 0) {
+        console.error("No key strokes found for input:", key);
+        return;
+      }
+
       for (const stroke of strokes) {
         this.sendKeyboardStroke({
           code: stroke.hex,
-          state: stroke.states[stateIndex],
+          state: stroke.states[pressed ? 0 : 1],
         });
       }
-    }
+    },
 
-    if (this.pressDelay > 0) {
-      await this.wait(this.pressDelay);
-    } else {
-      this.waitSync(1);
-    }
-  }
+    /**
+     * Sends a string of text by converting it into an array of `Key` values and passing them to `sendKeys`.
+     *
+     * @param text - The text string to be sent.
+     * @returns The result of the `sendKeys` method, which handles the array of keys.
+     */
+    printText: (text: string) => {
+      const chars = Array.from(text);
+      return this.keyboard.sendKeys(chars.map((ch) => ch as Key));
+    },
+  };
 
-  /**
-   * Sends a sequence of key inputs asynchronously.
-   *
-   * Iterates over the provided array of `Key` objects and sends each key using the `sendKey` method.
-   * Each key is sent sequentially, waiting for the previous one to complete before sending the next.
-   *
-   * @param inputs - An array of `Key` objects to be sent in order.
-   * @returns A promise that resolves when all keys have been sent.
-   */
-  async sendKeys(inputs: Key[]) {
-    for (const input of inputs) {
-      await this.sendKey(input);
-    }
-  }
-
-  /**
-   * Toggles the state of a specified key by sending the appropriate keyboard strokes.
-   *
-   * @param key - The key to toggle, represented as a `Key`.
-   * @param pressed - A boolean indicating whether the key should be pressed (`true`) or released (`false`).
-   * @returns A promise that resolves when the key toggle operation is complete.
-   */
-  async toggleKey(key: Key, pressed: boolean) {
-    const strokes = translateToKeyCodes(key);
-
-    if (strokes.length === 0) {
-      console.error("No key strokes found for input:", key);
-      return;
-    }
-
-    for (const stroke of strokes) {
-      this.sendKeyboardStroke({
-        code: stroke.hex,
-        state: stroke.states[pressed ? 0 : 1],
+  mouse = {
+    /**
+     * Moves the mouse cursor to the specified coordinates.
+     *
+     * @param x - The X coordinate to move the mouse to.
+     * @param y - The Y coordinate to move the mouse to.
+     * @param relative - If `true`, moves the mouse relative to its current position;
+     *                   if `false`, moves the mouse to the absolute screen coordinates. Defaults to `false`.
+     * @returns A promise that resolves when the mouse movement has been sent.
+     */
+    moveMouse: async (x: number, y: number, relative: boolean = false) => {
+      this.sendMouseStroke({
+        x,
+        y,
+        state: 0,
+        flags: relative ? MouseFlag.MOVE_RELATIVE : MouseFlag.MOVE_ABSOLUTE,
       });
-    }
-  }
+    },
 
-  /**
-   * Sends a string of text by converting it into an array of `Key` values and passing them to `sendKeys`.
-   *
-   * @param text - The text string to be sent.
-   * @returns The result of the `sendKeys` method, which handles the array of keys.
-   */
-  sendText(text: string) {
-    const chars = Array.from(text);
-    return this.sendKeys(chars.map((ch) => ch as Key));
-  }
+    /**
+     * Simulates a mouse click by sending a mouse button down and up event for the specified button.
+     *
+     * @param button - The mouse button to click. Must be one of: "BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", or "BUTTON_5".
+     * @throws {Error} If an invalid button is provided.
+     */
+    click: async (button: (typeof this.mouseButtons)[number]) => {
+      if (!this.mouseButtons.includes(button)) {
+        throw new Error(`Invalid button. Use ${this.mouseButtons.join(", ")}.`);
+      }
 
-  /**
-   * Moves the mouse cursor to the specified coordinates.
-   *
-   * @param x - The X coordinate to move the mouse to.
-   * @param y - The Y coordinate to move the mouse to.
-   * @param relative - If `true`, moves the mouse relative to its current position;
-   *                   if `false`, moves the mouse to the absolute screen coordinates. Defaults to `false`.
-   * @returns A promise that resolves when the mouse movement has been sent.
-   */
-  async moveMouse(x: number, y: number, relative: boolean = false) {
-    this.sendMouseStroke({
-      x,
-      y,
-      state: 0,
-      flags: relative ? MouseFlag.MOVE_RELATIVE : MouseFlag.MOVE_ABSOLUTE,
-    });
-  }
+      this.sendMouseStroke({
+        state: MouseState[(button + "_DOWN") as keyof typeof MouseState],
+      });
 
-  /**
-   * Simulates a mouse click by sending a mouse button down and up event for the specified button.
-   *
-   * @param button - The mouse button to click. Must be one of: "BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", or "BUTTON_5".
-   * @throws {Error} If an invalid button is provided.
-   */
-  async clickMouse(
-    button: "BUTTON_1" | "BUTTON_2" | "BUTTON_3" | "BUTTON_4" | "BUTTON_5",
-  ) {
-    if (
-      !["BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", "BUTTON_5"].includes(
-        button,
-      )
-    ) {
-      throw new Error(
-        "Invalid button. Use BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, or BUTTON_5.",
-      );
-    }
+      if (this.pressDelay > 0) {
+        await this.wait(this.pressDelay);
+      }
 
-    this.sendMouseStroke({
-      state: MouseState[(button + "_DOWN") as keyof typeof MouseState],
-    });
+      this.sendMouseStroke({
+        state: MouseState[(button + "_UP") as keyof typeof MouseState],
+      });
+    },
 
-    if (this.pressDelay > 0) {
-      await this.wait(this.pressDelay);
-    }
+    /**
+     * Toggles the state of a specified mouse button (pressed or released).
+     *
+     * @param button - The mouse button to toggle. Must be one of: "BUTTON_1", "BUTTON_2", "BUTTON_3", "BUTTON_4", or "BUTTON_5".
+     * @param pressed - A boolean indicating whether the button should be pressed (`true`) or released (`false`).
+     * @throws {Error} If an invalid button is provided.
+     */
+    toggle: async (
+      button: (typeof this.mouseButtons)[number],
+      pressed: boolean,
+    ) => {
+      if (!this.mouseButtons.includes(button)) {
+        throw new Error(`Invalid button. Use ${this.mouseButtons.join(", ")}.`);
+      }
 
-    this.sendMouseStroke({
-      state: MouseState[(button + "_UP") as keyof typeof MouseState],
-    });
-  }
+      this.sendMouseStroke({
+        state:
+          MouseState[
+            (button + (pressed ? "_DOWN" : "_UP")) as keyof typeof MouseState
+          ],
+      });
+    },
 
-  /**
-   * Scrolls the mouse wheel by the specified amount.
-   *
-   * @param amount - The amount to scroll the mouse wheel. Positive values scroll up, negative values scroll down.
-   * @returns A promise that resolves when the mouse scroll action has been sent.
-   */
-  async scrollMouse(amount: number) {
-    this.sendMouseStroke({
-      state: MouseState.WHEEL,
-      rolling: amount,
-    });
-  }
+    /**
+     * Scrolls the mouse wheel by the specified amount.
+     *
+     * @param amount - The amount to scroll the mouse wheel. Positive values scroll up, negative values scroll down.
+     * @returns A promise that resolves when the mouse scroll action has been sent.
+     */
+    scrollWheel: async (amount: number) => {
+      this.sendMouseStroke({
+        state: MouseState.WHEEL,
+        rolling: amount,
+      });
+    },
+  };
 }
