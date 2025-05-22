@@ -26,7 +26,7 @@ const keyMap = {
   "c": { hex: 0x2e, states: [0, 1] },
   "d": { hex: 0x20, states: [0, 1] },
   "e": { hex: 0x12, states: [0, 1] },
-  "é": { hex: 0x17, states: [0, 1] },
+  "é": { hex: 0x27, states: [0, 1] },
   "f": { hex: 0x21, states: [0, 1] },
   "g": { hex: 0x22, states: [0, 1] },
   "h": { hex: 0x23, states: [0, 1] },
