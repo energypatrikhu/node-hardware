@@ -94,6 +94,7 @@ const keyMap = {
   "lAlt": { hex: 0x38, states: [0, 1] },
   "space": { hex: 0x39, states: [0, 1] },
   " ": { hex: 0x39, states: [0, 1] },
+  "alt": { hex: 0x38, states: [0, 1] },
   "altGr": { hex: 0x38, states: [2, 3] },
   "context": { hex: 0x5d, states: [2, 3] },
   "upArrow": { hex: 0x48, states: [2, 3] },
