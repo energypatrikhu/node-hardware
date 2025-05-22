@@ -1,3 +1,1 @@
-import { Hardware } from "./hardware";
-
-export const hardware = new Hardware();
+export { Hardware } from "./hardware";
