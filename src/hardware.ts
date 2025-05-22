@@ -239,11 +239,11 @@ export class Hardware {
      * @param text - The text string to be sent.
      * @returns The result of the `sendKeys` method, which handles the array of keys.
      */
-    printText: (text: string, delayAfterCharTyping?: number) => {
+    printText: (text: string, delayAfterPress?: number, delayAfterCharTyping?: number) => {
       const chars = Array.from(text);
       return this.keyboard.sendKeys(
         chars.map((ch) => ch as Key),
-        this.delayAfterPress,
+        delayAfterPress,
         delayAfterCharTyping,
       );
     },
